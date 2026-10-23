@@ -9,14 +9,18 @@
     "jsxImportSource": "solid-js",
     "esModuleInterop": true,
     "skipLibCheck": true,
+    "allowImportingTsExtensions": true,
+    "noEmit": true,
     "types": [
       "void/env"
     ]
   },
   "include": [
+    "auth.ts",
     "src",
     "pages",
     "routes",
+    "tests/**/*.types.ts",
     "middleware",
     "crons",
     "queues",
