@@ -27,6 +27,7 @@
     "void": "^1.1.11"
   },
   "dependencies": {
+    "@valibot/to-json-schema": "1.8.0",
     "@void/solid": "1.1.11",
     "solid-js": "^1.9.17",
     "valibot": "1.5.0"
