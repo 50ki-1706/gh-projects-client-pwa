@@ -5,14 +5,7 @@ export default defineConfig({
   auth: {
     providers: ["github"],
   },
-  head: {
-    title: "GitHub ログイン",
-    htmlAttrs: { lang: "ja" },
-    meta: [
-      { charset: "utf-8" },
-      { name: "viewport", content: "width=device-width, initial-scale=1" },
-    ],
-  },
+  inference: { appType: "void" },
   "worker": {
     "compatibility_date": "2026-02-24"
   }
