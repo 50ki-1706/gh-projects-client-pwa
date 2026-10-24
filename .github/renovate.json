@@ -1,0 +1,31 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": ["config:recommended"],
+  "osvVulnerabilityAlerts": true,
+  "vulnerabilityAlerts": {
+    "automerge": false
+  },
+  "automerge": false,
+  "platformAutomerge": false,
+  "automergeType": "pr",
+  "ignoreTests": false,
+  "automergeStrategy": "squash",
+  "packageRules": [
+    {
+      "description": "Automerge non-major updates after all checks pass.",
+      "matchUpdateTypes": ["minor", "patch", "pin", "digest"],
+      "automerge": true
+    },
+    {
+      "description": "Keep potentially breaking 0.x minor updates manual.",
+      "matchUpdateTypes": ["minor"],
+      "matchCurrentVersion": "/^0\\./",
+      "automerge": false
+    },
+    {
+      "description": "Wait 3 days after an npm release before automerging.",
+      "matchDatasources": ["npm"],
+      "minimumReleaseAge": "3 days"
+    }
+  ]
+}
