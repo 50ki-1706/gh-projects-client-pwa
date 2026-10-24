@@ -5,3 +5,6 @@
 - Use Void's CLI and typed APIs. Before working with Void, read the relevant Markdown docs in `node_modules/void/docs/`; start with `guide/quickstart.md` for setup and `reference/cli.md` for commands.
 
 <!--/injected-by-void-->
+
+- cliを利用する際は必ずdevenv経由で実行してください。
+- このプロジェクトのドキュメントは全てdevenvで動かすことを前提に記述されています。
