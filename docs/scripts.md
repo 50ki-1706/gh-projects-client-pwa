@@ -6,5 +6,7 @@
 | --- | --- |
 | build | pnpm run build : vite build |
 | dev | pnpm run dev : vite |
+| fmt | pnpm run fmt : prettier --write |
 | sync-docs | devenvのscriptsからdocs/scripts.mdを更新。 |
 | test | pnpm run test |
+| typecheck | pnpm run typecheck : void prepare && tsrs --noEmit |

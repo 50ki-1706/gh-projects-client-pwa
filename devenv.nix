@@ -21,6 +21,14 @@ in
       description = "pnpm run dev : vite";
       exec = pnpmRun "dev";
     };
+    fmt = {
+      description = "pnpm run fmt : prettier --write";
+      exec = pnpmRun "fmt";
+    };
+    typecheck = {
+      description = "pnpm run typecheck : void prepare && tsrs --noEmit";
+      exec = pnpmRun "typecheck";
+    };
     test = {
       description = "pnpm run test";
       exec = pnpmRun "test";

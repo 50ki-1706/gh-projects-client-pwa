@@ -1,0 +1,10 @@
+pre-commit:
+  # Substituting this sentinel avoids Lefthook 2.2.2's empty-index skip.
+  # The shell no-op consumes it; both checks still inspect the whole worktree.
+  files: printf '%s\n' package.json
+  parallel: true
+  commands:
+    fmt:
+      run: ": {files} && devenv shell -- pnpm fmt:check"
+    typecheck:
+      run: ": {files} && devenv shell -- pnpm typecheck"
