@@ -1,7 +1,13 @@
 import { auth } from "void/client";
 import { projectSessionUser, type User } from "../src/client/session";
+import "../src/client/app.css";
+import loginSvg from "@material-symbols/svg-400/outlined/login.svg?raw";
 
-type IsAny<T> = 0 extends (1 & T) ? true : false;
+type IsAny<T> = 0 extends 1 & T ? true : false;
+const rawSvgIsTyped: IsAny<typeof loginSvg> = false;
+const rawSvg: string = loginSvg;
+void rawSvgIsTyped;
+void rawSvg;
 const projectionIsTyped: IsAny<ReturnType<typeof projectSessionUser>> = false;
 void projectionIsTyped;
 
