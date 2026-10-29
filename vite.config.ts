@@ -1,7 +1,7 @@
 import { defineConfig } from "vite";
 import { voidPlugin } from "void";
-import solidPlugin from "@solidjs/vite-plugin";
+import react from "@vitejs/plugin-react";
 
 export default defineConfig({
-  plugins: [voidPlugin(), solidPlugin({ ssr: false })],
+  plugins: [voidPlugin(), react()],
 });

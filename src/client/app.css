@@ -1,7 +1,9 @@
 :root {
-  font-family: system-ui, sans-serif;
-  color: #24292f;
-  background: #f6f8fa;
+  --mtrl-ref-typeface-brand: system-ui, "Noto Sans JP", "Yu Gothic", sans-serif;
+  --mtrl-ref-typeface-plain: system-ui, "Noto Sans JP", "Yu Gothic", sans-serif;
+  font-family: var(--mtrl-ref-typeface-plain);
+  color: var(--mtrl-sys-color-on-surface);
+  background: var(--mtrl-sys-color-surface);
   font-synthesis: none;
   text-rendering: optimizeLegibility;
 }
@@ -9,77 +11,64 @@
 * {
   box-sizing: border-box;
 }
-
 body {
   min-width: 320px;
   min-height: 100vh;
   margin: 0;
 }
-
-button {
-  min-height: 2.75rem;
-  padding: 0.65rem 1rem;
-  border: 0;
-  border-radius: 0.5rem;
-  color: #fff;
-  background: #24292f;
-  font: inherit;
-  font-weight: 600;
-  cursor: pointer;
-}
-
-button:disabled {
-  cursor: wait;
-  opacity: 0.65;
-}
-
 .auth-page {
   display: grid;
   min-height: 100vh;
-  padding: 1.5rem;
+  padding: 1rem;
   place-items: center;
 }
-
-.auth-card {
-  display: grid;
+.auth-panel {
   width: min(100%, 26rem);
-  gap: 1.25rem;
-  padding: 2rem;
-  border: 1px solid #d0d7de;
-  border-radius: 1rem;
-  background: #fff;
-  box-shadow: 0 0.5rem 1.5rem rgb(27 31 36 / 8%);
-  text-align: center;
+  min-width: 0;
 }
-
-.auth-card h1,
-.profile p {
+.auth-card {
+  width: 100%;
+}
+.auth-content > m-button {
+  justify-self: center;
+}
+.auth-content {
+  display: grid;
+  gap: 1.5rem;
+  padding: clamp(1rem, 5vw, 2rem);
+  text-align: center;
+  overflow-wrap: anywhere;
+}
+.auth-content h1,
+.profile p,
+.session-status p {
   margin: 0;
 }
-
-.profile {
+.auth-content h1 {
+  font-size: 1.75rem;
+  font-weight: 500;
+}
+.profile,
+.session-status {
   display: grid;
   justify-items: center;
-  gap: 0.75rem;
+  gap: 1rem;
+  min-width: 0;
 }
-
 .profile-image {
   width: 5rem;
   height: 5rem;
   border-radius: 50%;
   object-fit: cover;
 }
-
 .profile-name {
   font-size: 1.125rem;
-  font-weight: 700;
+  font-weight: 600;
 }
-
 .profile-email {
-  color: #57606a;
+  color: var(--mtrl-sys-color-on-surface-variant);
 }
-
 .error {
   margin: 0;
-  color: #cf222e;
+  color: var(--mtrl-sys-color-error);
 }

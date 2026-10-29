@@ -1,121 +1,69 @@
-import { Show, createSignal, onSettled } from "solid-js";
-import { auth } from "void/client";
-import { projectSessionUser, type User } from "./session";
+import { Button, Card, LoadingIndicator } from "material/react";
+import { icons } from "./icons";
+import { useAuthSession } from "./useAuthSession";
 
 export default function App() {
-  const [user, setUser] = createSignal<User | null>(null);
-  const [session, setSession] = createSignal<"loading" | "ready" | "error">("loading");
-  const [pending, setPending] = createSignal(false);
-  const [error, setError] = createSignal("");
-  let disposed = false;
-  let busy = false;
-  let revision = 0;
-  onSettled(() => {
-    void loadSession();
-    return () => { disposed = true; revision++; };
-  });
-
-  async function loadSession() {
-    if (disposed || busy) return;
-    busy = true;
-    const request = ++revision;
-    setSession("loading");
-    try {
-      const nextUser = projectSessionUser(await auth.getSession());
-      if (disposed || request !== revision) return;
-      setUser(nextUser);
-      setSession("ready");
-    } catch {
-      if (!disposed && request === revision) setSession("error");
-    } finally {
-      busy = false;
-    }
-  }
-
-  async function runAuthAction(
-    action: () => Promise<{ error?: unknown }>,
-    failureMessage: string,
-    onSuccess?: () => void,
-  ) {
-    if (disposed || busy || session() !== "ready") return;
-    busy = true;
-    setPending(true);
-    setError("");
-
-    try {
-      const result = await action();
-      if (disposed) return;
-      if (result.error) {
-        setError(failureMessage);
-        return;
-      }
-      onSuccess?.();
-    } catch {
-      if (!disposed) setError(failureMessage);
-    } finally {
-      busy = false;
-      if (!disposed) setPending(false);
-    }
-  }
-
-  function signIn() {
-    return runAuthAction(
-      () => auth.signIn.social({ provider: "github", callbackURL: "/" }),
-      "ログインに失敗しました。もう一度お試しください。",
-    );
-  }
-
-  function signOut() {
-    return runAuthAction(
-      () => auth.signOut(),
-      "ログアウトに失敗しました。もう一度お試しください。",
-      () => setUser(null),
-    );
-  }
+  const { user, session, pending, error, retry, signIn, signOut } =
+    useAuthSession();
 
   return (
-    <main class="auth-page">
-      <section class="auth-card" aria-labelledby="page-title">
-        <h1 id="page-title">GitHub ログイン</h1>
-        <Show when={session() === "loading"}>
-          <p role="status">読み込み中…</p>
-        </Show>
-        <Show when={session() === "error"}>
-          <p class="error" role="alert">セッションの取得に失敗しました。もう一度お試しください。</p>
-          <button type="button" onClick={loadSession}>再試行</button>
-        </Show>
-        <Show when={session() === "ready"}>
-          <Show
-            when={user()}
-            fallback={
-              <button type="button" disabled={pending()} onClick={signIn}>
-                {pending() ? "ログイン中…" : "GitHubでログイン"}
-              </button>
-            }
-          >
-            {(user) => (
-              <div class="profile">
-                <Show when={user().image}>
-                  {(image) => (
-                    <img
-                      class="profile-image"
-                      src={image()}
-                      alt={`${user().name}のプロフィール画像`}
-                    />
-                  )}
-                </Show>
-                <p class="profile-name">{user().name}</p>
-                <p class="profile-email">{user().email}</p>
-                <button type="button" disabled={pending()} onClick={signOut}>
-                  {pending() ? "ログアウト中…" : "ログアウト"}
-                </button>
+    <main className="auth-page">
+      <section className="auth-panel" aria-labelledby="page-title">
+        <Card
+          variant="outlined"
+          className="auth-card"
+          aria-label="GitHub ログイン"
+        >
+          <div className="auth-content">
+            <h1 id="page-title">GitHub ログイン</h1>
+            {session === "loading" && (
+              <div className="session-status" role="status">
+                <LoadingIndicator aria-hidden="true" />
+                <p>読み込み中…</p>
               </div>
             )}
-          </Show>
-        </Show>
-        <Show when={error()}>
-          {(message) => <p class="error" role="alert">{message()}</p>}
-        </Show>
+            {session === "error" && (
+              <>
+                <p className="error" role="alert">
+                  セッションの取得に失敗しました。もう一度お試しください。
+                </p>
+                <Button icon={icons.refresh} onClick={retry}>
+                  再試行
+                </Button>
+              </>
+            )}
+            {session === "ready" &&
+              (user ? (
+                <div className="profile">
+                  {user.image && (
+                    <img
+                      className="profile-image"
+                      src={user.image}
+                      alt={`${user.name}のプロフィール画像`}
+                    />
+                  )}
+                  <p className="profile-name">{user.name}</p>
+                  <p className="profile-email">{user.email}</p>
+                  <Button
+                    icon={icons.logout}
+                    disabled={pending}
+                    onClick={signOut}
+                  >
+                    {pending ? "ログアウト中…" : "ログアウト"}
+                  </Button>
+                </div>
+              ) : (
+                <Button icon={icons.login} disabled={pending} onClick={signIn}>
+                  {pending ? "ログイン中…" : "GitHubでログイン"}
+                </Button>
+              ))}
+            {error && (
+              <p className="error" role="alert">
+                {error}
+              </p>
+            )}
+          </div>
+        </Card>
       </section>
     </main>
   );

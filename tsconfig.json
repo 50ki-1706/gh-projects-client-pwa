@@ -5,21 +5,19 @@
     "module": "ESNext",
     "moduleResolution": "bundler",
     "strict": true,
-    "jsx": "preserve",
-    "jsxImportSource": "@solidjs/web",
+    "jsx": "react-jsx",
     "esModuleInterop": true,
     "skipLibCheck": true,
     "allowImportingTsExtensions": true,
     "noEmit": true,
-    "types": [
-      "void/env"
-    ]
+    "types": ["void/env", "vite/client"]
   },
   "include": [
     "auth.ts",
     "src",
     "routes",
     "tests/**/*.types.ts",
+    "tests/browser/lifecycle-fixture.tsx",
     "middleware",
     "crons",
     "queues",

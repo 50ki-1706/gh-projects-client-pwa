@@ -17,7 +17,7 @@ GitHub Projects をスマートフォンでも使いやすくする専用ビュ�
 
 ## 開発・検証
 
-UI は Solid 2 の CSR 専用です。Void の同一オリジン API / 認証 worker は維持します。
+UI は React 19 / Material の CSR 専用です。Void の同一オリジン API / 認証 worker は維持します。
 構成と認証の境界は [architecture.md](architecture.md) を参照してください。
 
 ```sh
