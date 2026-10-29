@@ -4,5 +4,6 @@ import { listProjectItems } from "../../../../src/github/projects.ts";
 
 export const GET = defineGitHubHandler(
   projectOperations.listProjectItems,
-  (token, { params, query }) => listProjectItems({ token, ...params, ...query }),
+  (token, { params, query }) =>
+    listProjectItems({ token, ...params, ...query }),
 );

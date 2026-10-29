@@ -245,7 +245,10 @@ const singleSelectFieldValueSchema = v.object({
   __typename: v.literal("ProjectV2ItemFieldSingleSelectValue"),
   name: v.nullable(v.string()),
   optionId: v.nullable(v.string()),
-  field: v.object({ ...fieldMetadataBase, dataType: v.literal("SINGLE_SELECT") }),
+  field: v.object({
+    ...fieldMetadataBase,
+    dataType: v.literal("SINGLE_SELECT"),
+  }),
 });
 
 const textFieldValueSchema = v.object({
@@ -305,7 +308,12 @@ const fieldValueConnectionSchema = v.object({
   pageInfo: pageInfoSchema,
 });
 
-const taskTypeSchema = v.picklist(["ISSUE", "PULL_REQUEST", "DRAFT_ISSUE", "REDACTED"]);
+const taskTypeSchema = v.picklist([
+  "ISSUE",
+  "PULL_REQUEST",
+  "DRAFT_ISSUE",
+  "REDACTED",
+]);
 
 const taskBase = {
   id: idSchema,
@@ -321,7 +329,9 @@ const taskRawObjectSchema = v.object({
   fieldValues: fieldValueConnectionSchema,
 });
 
-function hasConsistentContent(item: v.InferOutput<typeof taskRawObjectSchema>): boolean {
+function hasConsistentContent(
+  item: v.InferOutput<typeof taskRawObjectSchema>,
+): boolean {
   if (item.content === null) return true;
   switch (item.content.__typename) {
     case "Issue":
@@ -490,7 +500,9 @@ export type ProjectItemsQuery = v.InferOutput<typeof projectItemsQuerySchema>;
 export type ProjectItemQuery = v.InferOutput<typeof projectItemQuerySchema>;
 export type ProjectParams = v.InferOutput<typeof projectParamsSchema>;
 export type ProjectItemParams = v.InferOutput<typeof projectItemParamsSchema>;
-export type GitHubTokenRow = v.InferOutput<typeof githubTokenRowsSchema>[number];
+export type GitHubTokenRow = v.InferOutput<
+  typeof githubTokenRowsSchema
+>[number];
 export type PageInfo = v.InferOutput<typeof pageInfoSchema>;
 export type ProjectMetadata = v.InferOutput<typeof projectMetadataSchema>;
 export type ProjectListItem = v.InferOutput<typeof projectListItemSchema>;
@@ -506,5 +518,9 @@ export type ItemAccessNode = v.InferOutput<typeof itemAccessNodeSchema>;
 export type ItemDetailNode = v.InferOutput<typeof itemDetailNodeSchema>;
 export type GraphQLError = v.InferOutput<typeof graphqlErrorSchema>;
 export type ProjectsResponse = v.InferOutput<typeof projectsResponseSchema>;
-export type ProjectItemsResponse = v.InferOutput<typeof projectItemsResponseSchema>;
-export type ProjectItemResponse = v.InferOutput<typeof projectItemResponseSchema>;
+export type ProjectItemsResponse = v.InferOutput<
+  typeof projectItemsResponseSchema
+>;
+export type ProjectItemResponse = v.InferOutput<
+  typeof projectItemResponseSchema
+>;

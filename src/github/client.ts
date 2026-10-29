@@ -6,7 +6,9 @@ const GITHUB_GRAPHQL_ENDPOINT = "https://api.github.com/graphql";
 const DEFAULT_TIMEOUT_MS = 8_000;
 export type FetchLike = typeof fetch;
 
-export async function githubGraphQL<const TSchema extends v.GenericSchema>(options: {
+export async function githubGraphQL<
+  const TSchema extends v.GenericSchema,
+>(options: {
   token: string;
   query: string;
   variables: Record<string, unknown>;
@@ -109,7 +111,9 @@ export async function githubGraphQL<const TSchema extends v.GenericSchema>(optio
 }
 
 function isRateLimitError(error: GraphQLError): boolean {
-  return error.type === "RATE_LIMITED" || error.extensions?.code === "RATE_LIMITED";
+  return (
+    error.type === "RATE_LIMITED" || error.extensions?.code === "RATE_LIMITED"
+  );
 }
 
 function isNotFoundError(error: GraphQLError): boolean {

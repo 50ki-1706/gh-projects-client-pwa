@@ -60,7 +60,7 @@ export const projectOperations = {
     path: "/api/projects/{number}/items/{itemId}",
     summary: "アイテム詳細を取得",
     description:
-      "1アイテムの詳細を返します。最大2回の GraphQL リクエストを使い、1回目は所有権と所属だけを確認し、2回目で本文・ラベル・フィールドを取得します。2回目でもプロジェクト ID と所有者を再確認し、確認できない場合は内容を返さず `404 not_found` にします。`first` はラベルとフィールドの両方に適用され、`labelsAfter` と `fieldsAfter` は独立しています。対応するフィールドは SINGLE_SELECT / TEXT / DATE / NUMBER で、小数はそのまま保持します。それ以外は `{ kind: \"unsupported\", sourceType }` として返します。既知の型で値や `dataType` が欠けている、または一致しない場合は `unsupported` にせず `502 github_unavailable` です。フィールド名のハードコードや集計は行いません。",
+      '1アイテムの詳細を返します。最大2回の GraphQL リクエストを使い、1回目は所有権と所属だけを確認し、2回目で本文・ラベル・フィールドを取得します。2回目でもプロジェクト ID と所有者を再確認し、確認できない場合は内容を返さず `404 not_found` にします。`first` はラベルとフィールドの両方に適用され、`labelsAfter` と `fieldsAfter` は独立しています。対応するフィールドは SINGLE_SELECT / TEXT / DATE / NUMBER で、小数はそのまま保持します。それ以外は `{ kind: "unsupported", sourceType }` として返します。既知の型で値や `dataType` が欠けている、または一致しない場合は `unsupported` にせず `502 github_unavailable` です。フィールド名のハードコードや集計は行いません。',
     validators: {
       params: projectItemParamsSchema,
       query: projectItemQuerySchema,

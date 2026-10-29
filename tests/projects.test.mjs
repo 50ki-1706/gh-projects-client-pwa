@@ -3,10 +3,7 @@ import test from "node:test";
 import * as v from "valibot";
 import { authContext } from "void/auth";
 import auth from "../auth.ts";
-import {
-  GitHubApiError,
-  toErrorResponse,
-} from "../src/github/errors.ts";
+import { GitHubApiError, toErrorResponse } from "../src/github/errors.ts";
 import {
   getProjectItem,
   listProjectItems,
@@ -182,7 +179,8 @@ function itemAccessData(options = {}) {
   return {
     viewer: {
       id: VIEWER_ID,
-      projectV2: options.project === undefined ? projectMetadata() : options.project,
+      projectV2:
+        options.project === undefined ? projectMetadata() : options.project,
     },
     node:
       options.node === undefined
@@ -275,11 +273,18 @@ test("query validation applies defaults and ignores unknown parameters", () => {
 });
 
 test("query validation rejects out-of-range or malformed values", () => {
-  for (const first of ["", "0", "101", "1000", "1.0", "+1", "-1", " 1", "abc"]) {
-    assert.throws(
-      () => v.parse(projectsQuerySchema, { first }),
-      v.ValiError,
-    );
+  for (const first of [
+    "",
+    "0",
+    "101",
+    "1000",
+    "1.0",
+    "+1",
+    "-1",
+    " 1",
+    "abc",
+  ]) {
+    assert.throws(() => v.parse(projectsQuerySchema, { first }), v.ValiError);
   }
 
   for (const archived of ["", "2", "true", "false", "01"]) {
@@ -289,27 +294,53 @@ test("query validation rejects out-of-range or malformed values", () => {
     );
   }
 
-  assert.equal(v.parse(projectItemsQuerySchema, { archived: "1" }).archived, true);
-  assert.equal(v.parse(projectItemsQuerySchema, { archived: "0" }).archived, false);
+  assert.equal(
+    v.parse(projectItemsQuerySchema, { archived: "1" }).archived,
+    true,
+  );
+  assert.equal(
+    v.parse(projectItemsQuerySchema, { archived: "0" }).archived,
+    false,
+  );
 });
 
 test("cursor and path validation rejects control characters and excessive length", () => {
-  for (const after of ["", "a".repeat(2049), "\u0000", "\u001f", "\u007f", "\u0085"]) {
-    assert.throws(
-      () => v.parse(projectsQuerySchema, { after }),
-      v.ValiError,
-    );
+  for (const after of [
+    "",
+    "a".repeat(2049),
+    "\u0000",
+    "\u001f",
+    "\u007f",
+    "\u0085",
+  ]) {
+    assert.throws(() => v.parse(projectsQuerySchema, { after }), v.ValiError);
   }
-  assert.equal(v.parse(projectsQuerySchema, { after: "a".repeat(2048) }).after.length, 2048);
+  assert.equal(
+    v.parse(projectsQuerySchema, { after: "a".repeat(2048) }).after.length,
+    2048,
+  );
 
-  for (const value of ["0", "2147483648", "9999999999", "00000000001", "1.5", " 1"]) {
+  for (const value of [
+    "0",
+    "2147483648",
+    "9999999999",
+    "00000000001",
+    "1.5",
+    " 1",
+  ]) {
     assert.throws(
       () => v.parse(projectParamsSchema, { number: value }),
       v.ValiError,
     );
   }
-  assert.equal(v.parse(projectParamsSchema, { number: "2147483647" }).number, 2147483647);
-  assert.equal(v.parse(projectParamsSchema, { number: "0000000001" }).number, 1);
+  assert.equal(
+    v.parse(projectParamsSchema, { number: "2147483647" }).number,
+    2147483647,
+  );
+  assert.equal(
+    v.parse(projectParamsSchema, { number: "0000000001" }).number,
+    1,
+  );
 
   for (const itemId of ["", "a".repeat(513), "\u0000x", "x\u009f"]) {
     assert.throws(
@@ -318,8 +349,8 @@ test("cursor and path validation rejects control characters and excessive length
     );
   }
   assert.equal(
-    v.parse(projectItemParamsSchema, { number: "1", itemId: "a".repeat(512) }).itemId
-      .length,
+    v.parse(projectItemParamsSchema, { number: "1", itemId: "a".repeat(512) })
+      .itemId.length,
     512,
   );
 });
@@ -350,10 +381,16 @@ test("auth config uniquely appends read:project and preserves existing options",
   assert.equal(github.disableDefaultScope, true);
   assert.equal(github.prompt, "select_account");
   assert.deepEqual(github.scope, ["user:email", "read:project"]);
-  assert.equal(github.scope.filter((scope) => scope === "read:project").length, 1);
+  assert.equal(
+    github.scope.filter((scope) => scope === "read:project").length,
+    1,
+  );
   assert.equal(github.scope.includes("repo"), false);
   assert.equal(github.scope.includes("project"), false);
-  assert.equal(github.scope.some((scope) => scope.startsWith("write:")), false);
+  assert.equal(
+    github.scope.some((scope) => scope.startsWith("write:")),
+    false,
+  );
   assert.deepEqual(config.trustedOrigins, ["http://localhost"]);
 
   assert.throws(
@@ -376,7 +413,11 @@ test("query documents are bounded and do not request organization or option data
   assert.doesNotMatch(PROJECT_ITEM_ACCESS_QUERY, /organization/i);
   assert.doesNotMatch(PROJECT_ITEM_DETAIL_QUERY, /organization/i);
 
-  for (const query of [PROJECTS_QUERY, PROJECT_ITEMS_QUERY, PROJECT_ITEM_DETAIL_QUERY]) {
+  for (const query of [
+    PROJECTS_QUERY,
+    PROJECT_ITEMS_QUERY,
+    PROJECT_ITEM_DETAIL_QUERY,
+  ]) {
     assert.doesNotMatch(query, /ProjectV2ItemFieldLabelValue/);
     assert.doesNotMatch(query, /\boptions\s*[({]/);
     assert.doesNotMatch(query, /\bassignees\b/);
@@ -384,12 +425,18 @@ test("query documents are bounded and do not request organization or option data
 
   assert.match(PROJECTS_QUERY, /field:\s*UPDATED_AT,\s*direction:\s*DESC/);
   assert.equal((PROJECTS_QUERY.match(/totalCount/g) ?? []).length, 1);
-  assert.match(PROJECT_ITEMS_QUERY, /items\(\s*first:\s*\$first[\s\S]*archivedStates:\s*\$archivedStates/);
+  assert.match(
+    PROJECT_ITEMS_QUERY,
+    /items\(\s*first:\s*\$first[\s\S]*archivedStates:\s*\$archivedStates/,
+  );
   assert.match(
     PROJECT_ITEM_ACCESS_QUERY,
     /node\(id: \$itemId\) \{\s*__typename\s*\.\.\. on ProjectV2Item \{\s*id\s*project \{\s*id\s*\}/,
   );
-  assert.doesNotMatch(PROJECT_ITEM_ACCESS_QUERY, /fieldValues|labels\s*\(|\bbody\b|\bcontent\b/);
+  assert.doesNotMatch(
+    PROJECT_ITEM_ACCESS_QUERY,
+    /fieldValues|labels\s*\(|\bbody\b|\bcontent\b/,
+  );
   assert.match(
     PROJECT_ITEM_DETAIL_QUERY,
     /labels\(first: \$labelsFirst, after: \$labelsAfter\)/,
@@ -456,19 +503,35 @@ test("list projects returns project counts, closed state, and nullable fields", 
 
   assert.equal(fake.calls.length, 1);
   assert.equal(fake.calls[0].url, "https://api.github.com/graphql");
-  assert.equal(fake.calls[0].init.headers.Authorization, `Bearer ${TEST_TOKEN}`);
-  assert.equal(fake.calls[0].init.headers["User-Agent"], "gh-projects-viewer-pwa/1.0");
+  assert.equal(
+    fake.calls[0].init.headers.Authorization,
+    `Bearer ${TEST_TOKEN}`,
+  );
+  assert.equal(
+    fake.calls[0].init.headers["User-Agent"],
+    "gh-projects-viewer-pwa/1.0",
+  );
   assert.deepEqual(fake.calls[0].body.variables, { first: 20, after: "AFTER" });
   assert.equal(JSON.stringify(fake.calls[0].body).includes(TEST_TOKEN), false);
 });
 
 test("list projects accepts empty pages and rejects foreign owners and null nodes", async () => {
   const empty = fakeFetch(
-    dataResponse(projectsData([], { pageInfo: pageInfo(false, null), totalCount: 0 })),
+    dataResponse(
+      projectsData([], { pageInfo: pageInfo(false, null), totalCount: 0 }),
+    ),
   );
   assert.deepEqual(
-    await listProjects({ token: TEST_TOKEN, first: 20, fetchImpl: empty.fetchImpl }),
-    { projects: [], pageInfo: { hasNextPage: false, endCursor: null }, totalCount: 0 },
+    await listProjects({
+      token: TEST_TOKEN,
+      first: 20,
+      fetchImpl: empty.fetchImpl,
+    }),
+    {
+      projects: [],
+      pageInfo: { hasNextPage: false, endCursor: null },
+      totalCount: 0,
+    },
   );
 
   for (const nodes of [
@@ -511,7 +574,9 @@ test("list project items maps issue, pull request, draft, redacted, and null con
     }),
   ];
   const fake = fakeFetch(
-    dataResponse(projectItemsData(tasks, { pageInfo: pageInfo(true, "ITEM_CURSOR") })),
+    dataResponse(
+      projectItemsData(tasks, { pageInfo: pageInfo(true, "ITEM_CURSOR") }),
+    ),
   );
 
   const result = await listProjectItems({
@@ -528,7 +593,10 @@ test("list project items maps issue, pull request, draft, redacted, and null con
     title: "Roadmap",
     shortDescription: null,
   });
-  assert.deepEqual(result.pageInfo, { hasNextPage: true, endCursor: "ITEM_CURSOR" });
+  assert.deepEqual(result.pageInfo, {
+    hasNextPage: true,
+    endCursor: "ITEM_CURSOR",
+  });
   assert.equal(result.items.length, 5);
 
   assert.equal(result.items[0].type, "ISSUE");
@@ -567,7 +635,9 @@ test("list project items maps issue, pull request, draft, redacted, and null con
   assert.equal(result.items[3].content, null);
   assert.equal(result.items[4].content, null);
 
-  assert.deepEqual(fake.calls[0].body.variables.archivedStates, ["NOT_ARCHIVED"]);
+  assert.deepEqual(fake.calls[0].body.variables.archivedStates, [
+    "NOT_ARCHIVED",
+  ]);
   assert.equal(fake.calls[0].body.variables.labelsFirst, 100);
   assert.equal(fake.calls[0].body.variables.fieldsFirst, 100);
   assert.equal(fake.calls[0].body.variables.labelsAfter, null);
@@ -596,11 +666,13 @@ test("list project items includes archived items only when requested", async () 
 test("GitHub fieldValues are normalized into the API fields property", async () => {
   const upstream = task({
     fieldValues: {
-      nodes: [{
-        __typename: "ProjectV2ItemFieldTextValue",
-        text: "Ship it",
-        field: { id: "F_NOTES", name: "Notes", dataType: "TEXT" },
-      }],
+      nodes: [
+        {
+          __typename: "ProjectV2ItemFieldTextValue",
+          text: "Ship it",
+          field: { id: "F_NOTES", name: "Notes", dataType: "TEXT" },
+        },
+      ],
       pageInfo: pageInfo(true, "NEXT_FIELD"),
     },
   });
@@ -614,7 +686,15 @@ test("GitHub fieldValues are normalized into the API fields property", async () 
     fetchImpl: fake.fetchImpl,
   });
   assert.deepEqual(result.items[0].fields, {
-    nodes: [{ kind: "text", fieldId: "F_NOTES", name: "Notes", dataType: "TEXT", value: "Ship it" }],
+    nodes: [
+      {
+        kind: "text",
+        fieldId: "F_NOTES",
+        name: "Notes",
+        dataType: "TEXT",
+        value: "Ship it",
+      },
+    ],
     pageInfo: { hasNextPage: true, endCursor: "NEXT_FIELD" },
   });
   assert.equal("fieldValues" in result.items[0], false);
@@ -762,7 +842,10 @@ test("item detail uses a proof query, then normalizes all supported field kinds"
     dataResponse(itemAccessData()),
     dataResponse({
       node: detailNode({
-        fieldValues: { nodes: fields, pageInfo: pageInfo(true, "FIELD_CURSOR") },
+        fieldValues: {
+          nodes: fields,
+          pageInfo: pageInfo(true, "FIELD_CURSOR"),
+        },
       }),
     }),
   );
@@ -823,7 +906,10 @@ test("item detail uses a proof query, then normalizes all supported field kinds"
   });
 
   assert.equal(fake.calls.length, 2);
-  assert.doesNotMatch(fake.calls[0].body.query, /fieldValues|labels\s*\(|\bbody\b/);
+  assert.doesNotMatch(
+    fake.calls[0].body.query,
+    /fieldValues|labels\s*\(|\bbody\b/,
+  );
   assert.equal(fake.calls[0].body.variables.itemId, ITEM_ID);
   assert.equal(fake.calls[1].body.variables.labelsFirst, 100);
   assert.equal(fake.calls[1].body.variables.labelsAfter, "LABEL_CURSOR");
@@ -842,7 +928,11 @@ test("single select and unsupported values preserve nullable option names", asyn
               __typename: "ProjectV2ItemFieldSingleSelectValue",
               name: "In progress",
               optionId: null,
-              field: { id: "F_STATUS", name: "Status", dataType: "SINGLE_SELECT" },
+              field: {
+                id: "F_STATUS",
+                name: "Status",
+                dataType: "SINGLE_SELECT",
+              },
             },
             {
               __typename: "ProjectV2ItemFieldIterationValue",
@@ -1004,7 +1094,10 @@ test("item detail rejects content/type inconsistencies", async () => {
 test("item detail rejects a missing ProjectV2Item discriminator", async () => {
   const node = detailNode();
   delete node.__typename;
-  const fake = fakeFetch(dataResponse(itemAccessData()), dataResponse({ node }));
+  const fake = fakeFetch(
+    dataResponse(itemAccessData()),
+    dataResponse({ node }),
+  );
   await expectGitHubError(
     getProjectItem({
       token: TEST_TOKEN,
@@ -1021,15 +1114,27 @@ test("item detail rejects a missing ProjectV2Item discriminator", async () => {
 test("item detail denies access before fetching project content", async () => {
   const deniedCases = [
     itemAccessData({ project: null }),
-    itemAccessData({ project: { ...projectMetadata(), owner: owner("O_ORG", "Organization") } }),
-    itemAccessData({ project: { ...projectMetadata(), owner: owner("U_OTHER") } }),
+    itemAccessData({
+      project: { ...projectMetadata(), owner: owner("O_ORG", "Organization") },
+    }),
+    itemAccessData({
+      project: { ...projectMetadata(), owner: owner("U_OTHER") },
+    }),
     itemAccessData({ node: null }),
     itemAccessData({ node: { __typename: "Issue" } }),
     itemAccessData({
-      node: { __typename: "ProjectV2Item", id: "PVTI_OTHER", project: { id: PROJECT_ID } },
+      node: {
+        __typename: "ProjectV2Item",
+        id: "PVTI_OTHER",
+        project: { id: PROJECT_ID },
+      },
     }),
     itemAccessData({
-      node: { __typename: "ProjectV2Item", id: ITEM_ID, project: { id: "PVT_OTHER" } },
+      node: {
+        __typename: "ProjectV2Item",
+        id: ITEM_ID,
+        project: { id: "PVT_OTHER" },
+      },
     }),
   ];
 
@@ -1048,7 +1153,10 @@ test("item detail denies access before fetching project content", async () => {
     );
     assert.equal(fake.calls.length, 1);
     assert.match(fake.calls[0].body.query, /ProjectItemAccess/);
-    assert.doesNotMatch(fake.calls[0].body.query, /fieldValues|labels\s*\(|\bbody\b/);
+    assert.doesNotMatch(
+      fake.calls[0].body.query,
+      /fieldValues|labels\s*\(|\bbody\b/,
+    );
   }
 });
 
@@ -1088,13 +1196,18 @@ test("item detail rechecks project and owner after the proof query", async () =>
   const driftCases = [
     detailNode({ project: { id: "PVT_OTHER", owner: owner() } }),
     detailNode({ project: { id: PROJECT_ID, owner: owner("U_OTHER") } }),
-    detailNode({ project: { id: PROJECT_ID, owner: owner("O_ORG", "Organization") } }),
+    detailNode({
+      project: { id: PROJECT_ID, owner: owner("O_ORG", "Organization") },
+    }),
     null,
     { __typename: "Issue" },
   ];
 
   for (const node of driftCases) {
-    const fake = fakeFetch(dataResponse(itemAccessData()), dataResponse({ node }));
+    const fake = fakeFetch(
+      dataResponse(itemAccessData()),
+      dataResponse({ node }),
+    );
     await expectGitHubError(
       getProjectItem({
         token: TEST_TOKEN,
@@ -1126,19 +1239,33 @@ test("token selection handles missing, ambiguous, encrypted, and malformed rows"
   }
 
   expectSyncGitHubError(
-    () => selectGitHubAccessToken([{ accessToken: TEST_TOKEN }, { accessToken: null }]),
+    () =>
+      selectGitHubAccessToken([
+        { accessToken: TEST_TOKEN },
+        { accessToken: null },
+      ]),
     "ambiguous_github_account",
   );
   expectSyncGitHubError(
-    () => selectGitHubAccessToken([{ accessToken: TEST_TOKEN }, { accessToken: "gho_other" }]),
+    () =>
+      selectGitHubAccessToken([
+        { accessToken: TEST_TOKEN },
+        { accessToken: "gho_other" },
+      ]),
     "ambiguous_github_account",
   );
 
   for (const rows of [null, {}, "row", [{ accessToken: 5 }]]) {
-    expectSyncGitHubError(() => selectGitHubAccessToken(rows), "internal_error");
+    expectSyncGitHubError(
+      () => selectGitHubAccessToken(rows),
+      "internal_error",
+    );
   }
 
-  assert.equal(selectGitHubAccessToken([{ accessToken: TEST_TOKEN }]), TEST_TOKEN);
+  assert.equal(
+    selectGitHubAccessToken([{ accessToken: TEST_TOKEN }]),
+    TEST_TOKEN,
+  );
 });
 
 test("HTTP, rate limit, timeout, and GraphQL errors map to safe local errors", async () => {
@@ -1153,7 +1280,9 @@ test("HTTP, rate limit, timeout, and GraphQL errors map to safe local errors", a
   };
 
   let error = await expectGitHubError(
-    run(new Response(null, { status: 429, headers: { "retry-after": "99999" } })),
+    run(
+      new Response(null, { status: 429, headers: { "retry-after": "99999" } }),
+    ),
     "rate_limited",
     429,
   );
@@ -1168,14 +1297,21 @@ test("HTTP, rate limit, timeout, and GraphQL errors map to safe local errors", a
   assert.equal(toErrorResponse(error).headers.get("retry-after"), "60");
 
   error = await expectGitHubError(
-    run(new Response(null, { status: 429, headers: { "retry-after": "soon" } })),
+    run(
+      new Response(null, { status: 429, headers: { "retry-after": "soon" } }),
+    ),
     "rate_limited",
     429,
   );
   assert.equal(error.retryAfter, 60);
 
   error = await expectGitHubError(
-    run(jsonResponse({ errors: [{ type: "RATE_LIMITED", message: "upstream secret" }], data: {} })),
+    run(
+      jsonResponse({
+        errors: [{ type: "RATE_LIMITED", message: "upstream secret" }],
+        data: {},
+      }),
+    ),
     "rate_limited",
     429,
   );
@@ -1220,16 +1356,42 @@ test("HTTP, rate limit, timeout, and GraphQL errors map to safe local errors", a
     );
   }
   await expectGitHubError(
-    run(jsonResponse({ errors: [{ type: "SOMETHING", message: "sensitive" }] })),
+    run(
+      jsonResponse({ errors: [{ type: "SOMETHING", message: "sensitive" }] }),
+    ),
     "github_unavailable",
     502,
   );
-  await expectGitHubError(run(new Response(null, { status: 401 })), "github_reauth_required", 403);
-  await expectGitHubError(run(new Response(null, { status: 403 })), "github_reauth_required", 403);
-  await expectGitHubError(run(new Response(null, { status: 404 })), "not_found", 404);
-  await expectGitHubError(run(new Response(null, { status: 400 })), "github_unavailable", 502);
-  await expectGitHubError(run(new Response(null, { status: 500 })), "github_unavailable", 502);
-  await expectGitHubError(run(new Response("{", { status: 200 })), "github_unavailable", 502);
+  await expectGitHubError(
+    run(new Response(null, { status: 401 })),
+    "github_reauth_required",
+    403,
+  );
+  await expectGitHubError(
+    run(new Response(null, { status: 403 })),
+    "github_reauth_required",
+    403,
+  );
+  await expectGitHubError(
+    run(new Response(null, { status: 404 })),
+    "not_found",
+    404,
+  );
+  await expectGitHubError(
+    run(new Response(null, { status: 400 })),
+    "github_unavailable",
+    502,
+  );
+  await expectGitHubError(
+    run(new Response(null, { status: 500 })),
+    "github_unavailable",
+    502,
+  );
+  await expectGitHubError(
+    run(new Response("{", { status: 200 })),
+    "github_unavailable",
+    502,
+  );
   await expectGitHubError(
     run(jsonResponse({ data: null, errors: "bad" })),
     "github_unavailable",
@@ -1251,7 +1413,9 @@ test("HTTP, rate limit, timeout, and GraphQL errors map to safe local errors", a
   const timeout = fakeFetch(
     (_url, init) =>
       new Promise((_resolve, reject) => {
-        init.signal.addEventListener("abort", () => reject(new Error("aborted")));
+        init.signal.addEventListener("abort", () =>
+          reject(new Error("aborted")),
+        );
       }),
   );
   await expectGitHubError(
@@ -1271,7 +1435,13 @@ test("rate-limited HTTP 403 responses do not require reauthentication", async ()
     [{ "retry-after": "120" }, 120],
     [{ "retry-after": "invalid" }, 60],
     [{ "x-ratelimit-remaining": "0" }, 60],
-    [{ "x-ratelimit-remaining": "0", "x-ratelimit-reset": String(Math.floor(Date.now() / 1000) + 7200) }, 3600],
+    [
+      {
+        "x-ratelimit-remaining": "0",
+        "x-ratelimit-reset": String(Math.floor(Date.now() / 1000) + 7200),
+      },
+      3600,
+    ],
   ]) {
     const fake = fakeFetch(new Response(null, { status: 403, headers }));
     const error = await expectGitHubError(
@@ -1280,7 +1450,10 @@ test("rate-limited HTTP 403 responses do not require reauthentication", async ()
       429,
     );
     assert.equal(error.retryAfter, expectedRetry);
-    assert.equal(toErrorResponse(error).headers.get("retry-after"), String(expectedRetry));
+    assert.equal(
+      toErrorResponse(error).headers.get("retry-after"),
+      String(expectedRetry),
+    );
   }
 });
 
@@ -1323,25 +1496,39 @@ test("error responses cover all supported statuses with safe headers and bodies"
 
 test("routes authenticate first and validate before token access", async () => {
   const unauthenticatedListContext = routeContext({ query: { first: "0" } });
-  const unauthenticatedList = await listProjectsRoute(unauthenticatedListContext);
+  const unauthenticatedList = await listProjectsRoute(
+    unauthenticatedListContext,
+  );
   assert.equal(unauthenticatedList.status, 401);
   assert.equal(unauthenticatedList.headers.get("cache-control"), "no-store");
-  assert.equal((await unauthenticatedList.json()).error.code, "unauthenticated");
+  assert.equal(
+    (await unauthenticatedList.json()).error.code,
+    "unauthenticated",
+  );
 
-  const authenticatedInvalidListContext = routeContext({ query: { first: "0" } });
+  const authenticatedInvalidListContext = routeContext({
+    query: { first: "0" },
+  });
   const authenticatedInvalidList = await authContext.run(
     { user: { id: VIEWER_ID }, state: null },
     () => listProjectsRoute(authenticatedInvalidListContext),
   );
   assert.equal(authenticatedInvalidList.status, 400);
-  assert.equal((await authenticatedInvalidList.json()).error.code, "invalid_request");
+  assert.equal(
+    (await authenticatedInvalidList.json()).error.code,
+    "invalid_request",
+  );
 
   const unauthenticatedItemsContext = routeContext({ params: { number: "0" } });
-  const unauthenticatedItems = await listItemsRoute(unauthenticatedItemsContext);
+  const unauthenticatedItems = await listItemsRoute(
+    unauthenticatedItemsContext,
+  );
   assert.equal(unauthenticatedItems.status, 401);
   assert.equal(unauthenticatedItems.headers.get("cache-control"), "no-store");
 
-  const authenticatedInvalidItemsContext = routeContext({ params: { number: "0" } });
+  const authenticatedInvalidItemsContext = routeContext({
+    params: { number: "0" },
+  });
   const authenticatedInvalidItems = await authContext.run(
     { user: { id: VIEWER_ID }, state: null },
     () => listItemsRoute(authenticatedInvalidItemsContext),

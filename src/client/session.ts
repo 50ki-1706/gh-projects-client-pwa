@@ -16,8 +16,11 @@ export function projectSessionUser(result: unknown): User | null {
   }
   const user = result.data.user;
   if (
-    typeof user.name !== "string" || typeof user.email !== "string" ||
-    (user.image !== undefined && user.image !== null && typeof user.image !== "string")
+    typeof user.name !== "string" ||
+    typeof user.email !== "string" ||
+    (user.image !== undefined &&
+      user.image !== null &&
+      typeof user.image !== "string")
   ) {
     throw new Error("Invalid session response");
   }

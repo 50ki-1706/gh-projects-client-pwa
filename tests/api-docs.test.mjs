@@ -105,7 +105,9 @@ function resolveRef(document, ref) {
 
 function responseCodes(response) {
   const schema = response.content["application/json"].schema;
-  const refs = schema.$ref ? [schema.$ref] : schema.oneOf.map((item) => item.$ref);
+  const refs = schema.$ref
+    ? [schema.$ref]
+    : schema.oneOf.map((item) => item.$ref);
   return refs.map((ref) => ref.slice(ref.lastIndexOf("/") + 1));
 }
 
@@ -145,7 +147,10 @@ test("OpenAPI paths and methods match the project route files", () => {
   }
 
   assert.equal(spec.openapi, "3.1.0");
-  assert.equal(spec.jsonSchemaDialect, "https://json-schema.org/draft/2020-12/schema");
+  assert.equal(
+    spec.jsonSchemaDialect,
+    "https://json-schema.org/draft/2020-12/schema",
+  );
   assert.deepEqual(spec.servers, [{ url: "/", description: "同一オリジン" }]);
   assert.deepEqual(spec.security, [{ sessionCookie: [] }]);
   assert.equal(spec.components.securitySchemes.sessionCookie.in, "cookie");
@@ -153,10 +158,7 @@ test("OpenAPI paths and methods match the project route files", () => {
     spec.components.securitySchemes.sessionCookie.name,
     "better-auth.session_token",
   );
-  assert.equal(
-    spec.components.securitySchemes.sessionCookie.type,
-    "apiKey",
-  );
+  assert.equal(spec.components.securitySchemes.sessionCookie.type, "apiKey");
   assert.match(
     spec.components.securitySchemes.sessionCookie.description,
     /__Secure-better-auth\.session_token/,
@@ -294,8 +296,12 @@ test("response DTOs include nullable content and normalized field variants", () 
   const draftIssue = contentVariants.find(
     (schema) => schema.properties.kind.const === "draftIssue",
   );
-  assert.ok(issue.properties.labels.anyOf.some((schema) => schema.type === "null"));
-  assert.ok(issue.properties.body.anyOf.some((schema) => schema.type === "null"));
+  assert.ok(
+    issue.properties.labels.anyOf.some((schema) => schema.type === "null"),
+  );
+  assert.ok(
+    issue.properties.body.anyOf.some((schema) => schema.type === "null"),
+  );
   assert.deepEqual(draftIssue.properties.labels, { type: "null" });
   assert.deepEqual(draftIssue.properties.url, { type: "null" });
   assert.deepEqual(draftIssue.properties.repository, { type: "null" });
@@ -313,10 +319,17 @@ test("response DTOs include nullable content and normalized field variants", () 
   const pageInfo = task.properties.fields.properties.pageInfo;
   assert.match(pageInfo.description, /hasNextPage/);
   assert.match(pageInfo.description, /endCursor/);
-  assert.ok(pageInfo.properties.endCursor.anyOf.some((schema) => schema.type === "null"));
+  assert.ok(
+    pageInfo.properties.endCursor.anyOf.some(
+      (schema) => schema.type === "null",
+    ),
+  );
 
   const detailTask = schemas.ProjectItemResponse.properties.item;
-  assert.equal(detailTask.properties.fields.properties.nodes.items.oneOf.length, 5);
+  assert.equal(
+    detailTask.properties.fields.properties.nodes.items.oneOf.length,
+    5,
+  );
 });
 
 test("error components and responses derive codes, statuses, and messages", () => {
@@ -347,7 +360,16 @@ test("error components and responses derive codes, statuses, and messages", () =
     );
   }
 
-  const expectedStatuses = ["200", "400", "401", "403", "404", "429", "500", "502"];
+  const expectedStatuses = [
+    "200",
+    "400",
+    "401",
+    "403",
+    "404",
+    "429",
+    "500",
+    "502",
+  ];
   for (const path of Object.keys(EXPECTED_OPERATIONS)) {
     const operation = getOperation(spec, path);
     assert.deepEqual(Object.keys(operation.responses), expectedStatuses);
@@ -401,12 +423,15 @@ test("all component references resolve and no auth or upstream schemas leak", ()
     assert.notEqual(resolveRef(spec, ref), undefined, `unresolved ${ref}`);
   }
 
-  assert.deepEqual(Object.keys(spec.components.schemas).sort(), [
-    ...EXPECTED_ERROR_CODES.map(errorComponentName).sort(),
-    "ProjectItemResponse",
-    "ProjectItemsResponse",
-    "ProjectsResponse",
-  ].sort());
+  assert.deepEqual(
+    Object.keys(spec.components.schemas).sort(),
+    [
+      ...EXPECTED_ERROR_CODES.map(errorComponentName).sort(),
+      "ProjectItemResponse",
+      "ProjectItemsResponse",
+      "ProjectsResponse",
+    ].sort(),
+  );
 
   const serialized = JSON.stringify(spec.components.schemas);
   for (const leaked of [
@@ -461,10 +486,7 @@ test("operation and general descriptions keep the non-derivable semantics", () =
 });
 
 test("README points to the API documentation", () => {
-  const readme = readFileSync(
-    new URL("../README.md", import.meta.url),
-    "utf8",
-  );
+  const readme = readFileSync(new URL("../README.md", import.meta.url), "utf8");
 
   assert.match(readme, /\/docs\b/);
   assert.match(readme, /\/docs\/openapi\b/);
@@ -482,7 +504,10 @@ test("docs page uses the pinned Scalar ESM build with a JSON fallback", async ()
     html,
     /https:\/\/cdn\.jsdelivr\.net\/npm\/@scalar\/api-reference@1\.75\.1\/esm\.js/,
   );
-  assert.match(html, /createApiReference\("#app", \{ url: "\/docs\/openapi" \}\)/);
+  assert.match(
+    html,
+    /createApiReference\("#app", \{ url: "\/docs\/openapi" \}\)/,
+  );
   assert.match(html, /href="\/docs\/openapi"/);
   assert.match(html, /CDN を読み込めない場合/);
   assert.doesNotMatch(html, /authorization|bearer/i);

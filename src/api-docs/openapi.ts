@@ -1,9 +1,6 @@
 import { toJsonSchema, type JsonSchema } from "@valibot/to-json-schema";
 import * as v from "valibot";
-import {
-  errorDefinitions,
-  type GitHubApiErrorCode,
-} from "../github/errors.ts";
+import { errorDefinitions, type GitHubApiErrorCode } from "../github/errors.ts";
 import {
   projectOperations,
   type ProjectOperation,
@@ -254,7 +251,8 @@ export function buildOpenApiDocument(): OpenApiDocument {
       },
       headers: {
         [NO_STORE_HEADER]: {
-          description: "すべての API レスポンスをキャッシュしないことを示します。",
+          description:
+            "すべての API レスポンスをキャッシュしないことを示します。",
           schema: { type: "string", const: "no-store" },
         },
         [RETRY_AFTER_HEADER]: {

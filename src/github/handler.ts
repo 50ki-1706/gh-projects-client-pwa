@@ -24,12 +24,13 @@ export function defineGitHubHandler<
         throw new GitHubApiError("unauthenticated");
       }
 
-      const validatedHandler = defineHandler.withValidator(validators)(
-        async (_c, input) => {
-          const token = await getGitHubAccessToken(user.id);
-          return operation(token, input);
-        },
-      );
+      const validatedHandler = defineHandler.withValidator(validators)(async (
+        _c,
+        input,
+      ) => {
+        const token = await getGitHubAccessToken(user.id);
+        return operation(token, input);
+      });
       const response = await validatedHandler(c);
       if (response instanceof Response) {
         if (response.status === 400) {

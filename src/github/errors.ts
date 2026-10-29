@@ -52,13 +52,16 @@ export class GitHubApiError extends Error {
     this.name = "GitHubApiError";
     this.code = code;
     this.status = definition.status;
-    this.retryAfter = retryAfter === undefined ? undefined : boundRetryAfter(retryAfter);
+    this.retryAfter =
+      retryAfter === undefined ? undefined : boundRetryAfter(retryAfter);
   }
 }
 
 export function toErrorResponse(error: unknown): Response {
   const apiError =
-    error instanceof GitHubApiError ? error : new GitHubApiError("internal_error");
+    error instanceof GitHubApiError
+      ? error
+      : new GitHubApiError("internal_error");
   const headers: Record<string, string> = {
     "Cache-Control": "no-store",
   };

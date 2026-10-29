@@ -183,11 +183,7 @@ export const PROJECT_ITEMS_QUERY = /* GraphQL */ `
           __typename
           id
         }
-        items(
-          first: $first
-          after: $after
-          archivedStates: $archivedStates
-        ) {
+        items(first: $first, after: $after, archivedStates: $archivedStates) {
           nodes {
             ...TaskFields
           }
