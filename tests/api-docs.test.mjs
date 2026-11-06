@@ -8,6 +8,7 @@ import {
   getOpenApiDocument,
 } from "../src/api-docs/openapi.ts";
 import { errorDefinitions } from "../src/github/errors.ts";
+import { projectApp } from "../src/github/rpc.ts";
 import { GET as docsPage } from "../routes/docs/index.ts";
 import { GET as openApiRoute } from "../routes/docs/openapi.ts";
 
@@ -132,6 +133,15 @@ test("OpenAPI paths and methods match the project route files", () => {
   );
 
   assert.deepEqual(scanned, expected);
+  const routes = Object.fromEntries(
+    projectApp.routes
+      .filter((route) => route.method === "GET")
+      .map((route) => [
+        route.path.replace(/:([^/]+)/g, "{$1}"),
+        [route.method],
+      ]),
+  );
+  assert.deepEqual(routes, expected);
   assert.deepEqual(
     Object.fromEntries(
       Object.entries(spec.paths).map(([path, item]) => [

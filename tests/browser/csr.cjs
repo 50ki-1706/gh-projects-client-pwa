@@ -404,6 +404,31 @@ async (page, origin = "http://localhost:5173", artifactDir = ".") => {
       (await projects.json()).error.code === "unauthenticated",
     "API 401 must not be shell",
   );
+  for (const path of [
+    "/api/projects?first=0",
+    "/api/projects/0/items?archived=invalid",
+    "/api/projects/0/items/id?first=0",
+  ]) {
+    const result = await page.request.get(origin + path);
+    assert(
+      result.status() === 401 &&
+        (await result.json()).error.code === "unauthenticated",
+      `Anonymous invalid API ${path}`,
+    );
+  }
+  for (const [method, path, status] of [
+    ["HEAD", "/api/projects", 401],
+    ["POST", "/api/projects", 404],
+    ["GET", "/api/projects/", 404],
+    ["GET", "/api/projects/7/items/", 404],
+    ["GET", "/api/projects/unknown/path", 404],
+  ]) {
+    const result = await page.request.fetch(origin + path, {
+      method,
+      headers: { Accept: "application/json" },
+    });
+    assert(result.status() === status, `${method} ${path}: ${result.status()}`);
+  }
   const assets = [];
   const entry = [...shell.matchAll(/<script[^>]*\bsrc="([^"]+)"/g)]
     .map((match) => match[1])

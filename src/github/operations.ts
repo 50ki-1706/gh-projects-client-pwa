@@ -25,8 +25,7 @@ export type ProjectOperation = {
   };
 };
 
-// Shared by the route handlers and OpenAPI generator. Void's validator types
-// are phantom types, so documentation cannot discover them from a handler.
+// OpenAPI metadata shares the request and response schemas with the router.
 export const projectOperations = {
   listProjects: {
     path: "/api/projects",

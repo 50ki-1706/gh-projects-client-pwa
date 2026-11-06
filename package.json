@@ -39,6 +39,7 @@
   "dependencies": {
     "@material-symbols/svg-400": "0.48.1",
     "@valibot/to-json-schema": "1.8.0",
+    "hono": "4.13.13",
     "material": "3.2.2",
     "react": "19.3.1",
     "react-dom": "19.3.1",

@@ -1,7 +1,13 @@
 import assert from "node:assert/strict";
-import test from "node:test";
+import test, { mock } from "node:test";
+import { Hono } from "hono";
 import * as v from "valibot";
 import { authContext } from "void/auth";
+import { createProjectApp, projectApp } from "../src/github/rpc.ts";
+import {
+  createProjectsClient,
+  encodeProjectPathSegment,
+} from "../src/client/projects-rpc.ts";
 import auth from "../auth.ts";
 import { GitHubApiError, toErrorResponse } from "../src/github/errors.ts";
 import {
@@ -243,13 +249,18 @@ function expectSyncGitHubError(callback, code) {
 }
 
 function routeContext(options = {}) {
-  const params = options.params ?? {};
-  const query = options.query ?? {};
+  const { number, itemId } = options.params ?? {};
+  const path =
+    number === undefined
+      ? "/api/projects"
+      : `/api/projects/${encodeURIComponent(number)}/items${itemId === undefined ? "" : `/${encodeURIComponent(itemId)}`}`;
   return {
     req: {
-      url: `http://localhost/api/projects?${new URLSearchParams(query)}`,
-      param: () => params,
+      raw: new Request(
+        `http://localhost${path}?${new URLSearchParams(options.query ?? {})}`,
+      ),
     },
+    env: {},
   };
 }
 
@@ -1551,4 +1562,202 @@ test("routes authenticate first and validate before token access", async () => {
     (await authenticatedInvalidItem.json()).error.code,
     "invalid_request",
   );
+});
+
+test("RPC routes transform inputs, preserve pagination and encode opaque IDs", async () => {
+  const id = "item/%?#日本";
+  const upstream = fakeFetch(
+    dataResponse(
+      projectsData([projectListItem()], { pageInfo: pageInfo(true, "next") }),
+    ),
+    dataResponse(projectItemsData([task()])),
+    dataResponse(
+      itemAccessData({
+        node: { __typename: "ProjectV2Item", id, project: { id: PROJECT_ID } },
+      }),
+    ),
+    dataResponse({ node: detailNode({ id }) }),
+    dataResponse(projectsData([])),
+  );
+  const originalFetch = globalThis.fetch;
+  const users = [];
+  globalThis.fetch = upstream.fetchImpl;
+  try {
+    const app = createProjectApp(async (userId) => {
+      users.push(userId);
+      return TEST_TOKEN;
+    });
+    const urls = [];
+    const client = createProjectsClient("", (url, init) => {
+      urls.push(String(url));
+      return app.fetch(
+        new Request(new URL(String(url), "http://localhost"), init),
+      );
+    });
+    await authContext.run(
+      { user: { id: VIEWER_ID }, state: null },
+      async () => {
+        const projects = await client.api.projects.$get({
+          query: { after: "cursor" },
+        });
+        assert.equal(projects.status, 200);
+        assert.equal(projects.headers.get("cache-control"), "no-store");
+        assert.equal((await projects.json()).pageInfo.endCursor, "next");
+        const items = await client.api.projects[":number"].items.$get({
+          param: { number: "007" },
+          query: { first: "03", archived: "1", after: "more" },
+        });
+        assert.equal(items.status, 200);
+        assert.equal(items.headers.get("cache-control"), "no-store");
+        assert.equal((await items.json()).items.length, 1);
+        const detail = await client.api.projects[":number"].items[
+          ":itemId"
+        ].$get({
+          param: { number: "7", itemId: encodeProjectPathSegment(id) },
+          query: { labelsAfter: "label", fieldsAfter: "field" },
+        });
+        assert.equal(detail.status, 200);
+        assert.equal(detail.headers.get("cache-control"), "no-store");
+        assert.equal((await detail.json()).item.id, id);
+        const invalid = await app.request("/api/projects?first=20&first=101");
+        assert.equal(invalid.status, 400);
+        const valid = await app.request("/api/projects?first=101&first=20");
+        assert.equal(valid.status, 200);
+      },
+    );
+    assert.equal(urls.length, 3);
+    assert.equal(urls[0], "/api/projects?after=cursor");
+    assert.ok(urls[2].includes(encodeProjectPathSegment(id)));
+    assert.deepEqual(upstream.calls[0].body.variables, {
+      first: 20,
+      after: "cursor",
+    });
+    assert.deepEqual(upstream.calls[1].body.variables, {
+      number: 7,
+      first: 3,
+      after: "more",
+      archivedStates: ["ARCHIVED", "NOT_ARCHIVED"],
+      labelsFirst: 100,
+      labelsAfter: null,
+      fieldsFirst: 100,
+      fieldsAfter: null,
+    });
+    assert.deepEqual(upstream.calls[2].body.variables, {
+      number: 7,
+      itemId: id,
+    });
+    assert.deepEqual(upstream.calls[3].body.variables, {
+      itemId: id,
+      labelsFirst: 100,
+      labelsAfter: "label",
+      fieldsFirst: 100,
+      fieldsAfter: "field",
+    });
+    assert.equal(upstream.calls[4].body.variables.first, 20);
+    assert.deepEqual(users, [VIEWER_ID, VIEWER_ID, VIEWER_ID, VIEWER_ID]);
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
+});
+
+test("adapters forward raw request, environment and optional execution context", async () => {
+  const captured = [];
+  const spy = mock.method(projectApp, "fetch", async (...args) => {
+    captured.push(args);
+    return new Response(null, { status: 204 });
+  });
+  try {
+    for (const [adapter, path] of [
+      [listProjectsRoute, "/api/projects?first=3"],
+      [listItemsRoute, "/api/projects/7/items?first=4"],
+      [itemDetailRoute, "/api/projects/7/items/x%2Fy?first=5"],
+    ]) {
+      const raw = new Request(`http://localhost${path}`);
+      const env = { marker: path };
+      const executionCtx = { waitUntil() {}, passThroughOnException() {} };
+      await adapter({ req: { raw }, env, executionCtx });
+      await adapter({
+        req: { raw },
+        env,
+        get executionCtx() {
+          throw new Error("no context");
+        },
+      });
+      assert.deepEqual(captured.splice(0), [
+        [raw, env, executionCtx],
+        [raw, env, undefined],
+      ]);
+    }
+  } finally {
+    spy.mock.restore();
+  }
+});
+
+test("hc does not retry an unsuccessful response", async () => {
+  let calls = 0;
+  const client = createProjectsClient("", async () => {
+    calls++;
+    return Response.json(
+      { error: { code: "internal_error", message: "error" } },
+      { status: 500 },
+    );
+  });
+  assert.equal((await client.api.projects.$get({ query: {} })).status, 500);
+  assert.equal(calls, 1);
+});
+
+test("Hono dispatch matches original Void route method and slash behavior", async () => {
+  const baseline = new Hono();
+  for (const path of [
+    "/api/projects",
+    "/api/projects/:number/items",
+    "/api/projects/:number/items/:itemId",
+  ]) {
+    baseline.get(path, () =>
+      toErrorResponse(new GitHubApiError("unauthenticated")),
+    );
+  }
+  for (const [method, path] of [
+    ["GET", "/api/projects"],
+    ["HEAD", "/api/projects"],
+    ["POST", "/api/projects"],
+    ["GET", "/api/projects/"],
+    ["GET", "/api/projects/7/items/"],
+    ["GET", "/api/projects/unknown/path"],
+  ]) {
+    const original = await baseline.request(path, { method });
+    const current = await projectApp.request(path, { method });
+    assert.equal(current.status, original.status, `${method} ${path}`);
+    assert.equal(
+      await current.text(),
+      await original.text(),
+      `${method} ${path} body`,
+    );
+  }
+});
+
+test("RPC errors are sanitized and validation precedes token lookup", async () => {
+  let calls = 0;
+  let failure = new GitHubApiError("rate_limited", 123);
+  const app = createProjectApp(async () => {
+    calls++;
+    throw failure;
+  });
+  const anonymous = await app.request("/api/projects?first=0");
+  assert.equal(anonymous.status, 401);
+  await authContext.run({ user: { id: VIEWER_ID }, state: null }, async () => {
+    assert.equal((await app.request("/api/projects?first=0")).status, 400);
+    assert.equal(calls, 0);
+    const limited = await app.request("/api/projects");
+    assert.equal(limited.status, 429);
+    assert.equal(limited.headers.get("retry-after"), "123");
+    assert.equal(limited.headers.get("cache-control"), "no-store");
+    assert.equal((await limited.json()).error.code, "rate_limited");
+    failure = new Error("sensitive detail");
+    const unknown = await app.request("/api/projects");
+    assert.equal(unknown.status, 500);
+    assert.equal(unknown.headers.get("cache-control"), "no-store");
+    assert.equal((await unknown.json()).error.code, "internal_error");
+  });
+  assert.equal(calls, 2);
 });
